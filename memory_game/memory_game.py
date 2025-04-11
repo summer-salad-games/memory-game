@@ -1,19 +1,15 @@
-from gpiozero import Button, LED
-import atexit
+from gpiozero import Button, LED, Buzzer
 import time
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
-class Main:
-    """ Main class program """
-
+class MemoryGame:
     def __init__(self, init_delay = 0, loop_delay = 0):
-        """ Insance fields definition """
         logging.info("Initializing program")
         self._init_delay = init_delay
         self._loop_delay = loop_delay
-
+        
         self._greenButton = Button(22)
         self._redButton = Button(5)
         self._blueButton = Button(6)
@@ -25,10 +21,11 @@ class Main:
         self._blueLed = LED(25)
         self._yellowLed = LED(12)
 
+        self._buzzer = Buzzer(17)
+
         time.sleep(self._init_delay)
 
     def _setup(self):
-        """ Setup function (Will execute only one time) """
         logging.info("Setting up program")
 
         self._greenButton.when_activated = lambda: self._greenButtonEvent(True)
@@ -44,17 +41,16 @@ class Main:
         self._yellowButton.when_deactivated = lambda: self._yellowButtonEvent(False)
 
         self._resetButton.when_activated = lambda: self._resetButtonEvent(True)
+        self._resetButton.when_deactivated = lambda: self._resetButtonEvent(False)
 
     def _loop(self):
-        """ Loop function (Will execute every tick) """
+        """ Loop function """
 
     def _exit(self):
-        """ Clean up function (Will execute when program exits) """
         logging.info("Exiting program")
         self._reset()
 
     def _greenButtonEvent(self, state):
-        """ Callback function when green button is pressed """
         if state:
             logging.info("Green button activated")
             self._greenLed.on()
@@ -63,7 +59,6 @@ class Main:
             self._greenLed.off()
 
     def _redButtonEvent(self, state):
-        """ Callback function when red button is pressed """
         if state:
             logging.info("Red button activated")
             self._redLed.on()
@@ -72,7 +67,6 @@ class Main:
             self._redLed.off()
 
     def _yellowButtonEvent(self, state):
-        """ Callback function when yellow button is pressed """
         if state:
             logging.info("Yellow button activated")
             self._yellowLed.on()
@@ -81,7 +75,6 @@ class Main:
             self._yellowLed.off()
 
     def _blueButtonEvent(self, state):
-        """ Callback function when blue button is pressed """
         if state:
             logging.info("Blue button activated")
             self._blueLed.on()
@@ -89,25 +82,20 @@ class Main:
             logging.info("Blue button deactivated")
             self._blueLed.off()
 
-
     def _resetButtonEvent(self, state):
-        """ Callback function when reset button is pressed """
-        if state:
-            logging.info("Reset button activated")
-            self._reset()
+        self._reset()
 
     def _reset(self):
-        """ Reset function """
         logging.info("Resetting states")
         self._greenLed.off()
         self._redLed.off()
         self._blueLed.off()
         self._yellowLed.off()
+        self._buzzer.off()
 
     def start(self):
-        """ Entrypoint of the program """
+        logging.info("Starting program")
         try:
-            atexit.register(self._exit)
             self._setup()
             time.sleep(self._init_delay)
             logging.info("Starting loop")
@@ -115,13 +103,6 @@ class Main:
                 self._loop()
                 time.sleep(self._loop_delay)
         except (KeyboardInterrupt, SystemExit):
-            self._exit()
+            logging.info("Program interrupted")
         finally:
             self._exit()
-
-def main():
-    """ Global function to initiate the module (used for setup.py as an enttry point) """
-    Main(init_delay=1, loop_delay=0.025).start()
-
-if __name__ == "__main__":
-    main()

@@ -1,4 +1,3 @@
-""" setup.py definition file """
 from os import path
 from setuptools import setup, find_packages
 
@@ -17,7 +16,7 @@ setup(
     author_email='summer.salad.games@gmail.com',
     entry_points={
         'console_scripts': [
-            'memory_game=memory_game.main:main'
+            'memory_game = main:main'
         ]
     },
     packages=find_packages(),
