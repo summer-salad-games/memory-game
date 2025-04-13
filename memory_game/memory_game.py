@@ -13,59 +13,56 @@ class MemoryGame:
         self._init_delay = init_delay
         self._loop_delay = loop_delay
         
-        self._green_button = Button(22)
-        self._red_button = Button(5)
-        self._blue_button = Button(6)
-        self._yellow_button = Button(26)
-        self._reset_button = Button(13)
+        self._green_button = Button(22, bounce_time=0.1)
+        self._red_button = Button(5, bounce_time=0.1)
+        self._blue_button = Button(6, bounce_time=0.1)
+        self._yellow_button = Button(26, bounce_time=0.1)
+        self._reset_button = Button(13, bounce_time=0.1)
 
         self._green_led = LED(23)
         self._red_led = LED(24)
         self._blue_led = LED(25)
         self._yellow_led = LED(12)
 
-        self._buzzer = Buzzer(17)
-
         self._rgb_led = RGBLED(16, 21 , 20, active_high=False, initial_value=(0, 0, 0))
 
+        self._buzzer = Buzzer(17)
+
+        self._possible_colors = ["red", "green", "blue", "yellow"]
         self._role = "machine"
         self._is_game_ready = False
+        self._colors_to_remember = []
+        self._turn = 0
 
         time.sleep(self._init_delay)
 
     def _setup(self):
         logging.info("Setting up program")
 
-        self._reset()
+        self._green_button.when_activated = lambda: self._button_event(True, self._green_led, "green")
+        self._green_button.when_deactivated = lambda: self._button_event(False, self._green_led, "green")
 
-        self._green_button.when_activated = lambda: self._green_button_event(True)
-        self._green_button.when_deactivated = lambda: self._green_button_event(False)
+        self._red_button.when_activated = lambda: self._button_event(True, self._red_led, "red")
+        self._red_button.when_deactivated = lambda: self._button_event(False, self._red_led, "red")
 
-        self._red_button.when_activated = lambda: self._red_button_event(True)
-        self._red_button.when_deactivated = lambda: self._red_button_event(False)
+        self._blue_button.when_activated = lambda: self._button_event(True, self._blue_led, "blue")
+        self._blue_button.when_deactivated = lambda: self._button_event(False, self._blue_led, "blue")
 
-        self._blue_button.when_activated = lambda: self._blue_button_event(True)
-        self._blue_button.when_deactivated = lambda: self._blue_button_event(False)
-
-        self._yellow_button.when_activated = lambda: self._yellow_button_event(True)
-        self._yellow_button.when_deactivated = lambda: self._yellow_button_event(False)
+        self._yellow_button.when_activated = lambda: self._button_event(True, self._yellow_led, "yellow")
+        self._yellow_button.when_deactivated = lambda: self._button_event(False, self._yellow_led, "yellow")
 
         self._reset_button.when_activated = lambda: self._reset_button_event(True)
         self._reset_button.when_deactivated = lambda: self._reset_button_event(False)
-
-        self._possible_colors = ["red", "green", "blue", "yellow"]
-        self._colors_to_remember = []
 
         self._start_game()
 
     def _start_game(self):
         logging.info("Starting game")
 
-        self._start_init_sequence()
+        self._reset()
+        self._play_init_sequence()
         time.sleep(2)
-        self._set_role("machine")
         self._add_color_to_remember()
-        self._set_role("user")
 
     def _loop(self):
         """ Loop function """
@@ -76,6 +73,7 @@ class MemoryGame:
 
     def _play_color_sequence(self):
         logging.info(f"Playing color sequence {self._colors_to_remember}")
+
         for color in self._colors_to_remember:
             if color == "red":
                 self._red_led.on()
@@ -86,20 +84,22 @@ class MemoryGame:
             elif color == "yellow":
                 self._yellow_led.on()
 
-            time.sleep(1.5)
+            time.sleep(0.5)
 
             self._red_led.off()
             self._green_led.off()
             self._blue_led.off()
             self._yellow_led.off()
 
-            time.sleep(1.5)
+            time.sleep(0.5)
 
     def _add_color_to_remember(self):
+        self._set_role("machine")
         new_color = random.choice(self._possible_colors)
         logging.info(f"Adding color {new_color} to remember list")
         self._colors_to_remember.append(new_color)
         self._play_color_sequence()
+        self._set_role("user")
 
     def _set_role(self, role):
         logging.info(f"Setting role to {role}")
@@ -110,7 +110,7 @@ class MemoryGame:
         elif role == "user":
             self._rgb_led.value = (0, 1, 0)
 
-    def _start_init_sequence(self):
+    def _play_init_sequence(self):
         logging.info("Starting initialization sequence")
         delay = 0.15
         
@@ -167,42 +167,65 @@ class MemoryGame:
             time.sleep(delay)
             led.off()
 
-    def _green_button_event(self, state):
-        if state:
-            logging.info("Green button activated")
-            self._green_led.on()
-        else:
-            logging.info("Green button deactivated")
-            self._green_led.off()
+    def _button_event(self, state, led, color):
+        logging.info(f"Button {color} event state {state}")
 
-    def _red_button_event(self, state):
-        if state:
-            logging.info("Red button activated")
-            self._red_led.on()
-        else:
-            logging.info("Red button deactivated")
-            self._red_led.off()
+        if not self._is_game_ready or self._role == "machine":
+            logging.info(f"Ignoring {color} button")
+            return
 
-    def _yellow_button_event(self, state):
         if state:
-            logging.info("Yellow button activated")
-            self._yellow_led.on()
+            led.on()
         else:
-            logging.info("Yellow button deactivated")
-            self._yellow_led.off()
+            led.off()
 
-    def _blue_button_event(self, state):
-        if state:
-            logging.info("Blue button activated")
-            self._blue_led.on()
-        else:
-            logging.info("Blue button deactivated")
-            self._blue_led.off()
+        if not state:
+            if self._colors_to_remember[self._turn] == color:
+                logging.info(f"Correct {color} color pressed")
+                self._turn += 1
+            else:
+                logging.info("Wrong color pressed, game over")
+                self._play_game_over_sequence()
+                self._start_game()
+
+            if self._turn == len(self._colors_to_remember):
+                logging.info("All colors has been guesed")
+                time.sleep(0.5)
+                self._turn = 0
+                self._add_color_to_remember()
+
+    def _play_game_over_sequence(self):
+        logging.info("Playing game over sequence")
+
+        self._blue_led.on()
+        self._red_led.on()
+        self._yellow_led.on()
+        self._green_led.on()
+        self._rgb_led.value = (1, 0, 0)
+        self._play_buzzer()
+        self._blue_led.off()
+        self._red_led.off()
+        self._yellow_led.off()
+        self._green_led.off()
+        self._rgb_led.off()
+        time.sleep(0.15)
+        self._blue_led.on()
+        self._red_led.on()
+        self._yellow_led.on()
+        self._green_led.on()
+        self._rgb_led.value = (1, 0, 0)
+        self._play_buzzer()
+        self._blue_led.off()
+        self._red_led.off()
+        self._yellow_led.off()
+        self._green_led.off()
+        self._rgb_led.off()
+        time.sleep(2)
 
     def _reset_button_event(self, state):
         if state:
             logging.info("Reset button activated")
-            self._reset()
+            self._start_game()
 
     def _reset(self):
         logging.info("Resetting states")
@@ -212,6 +235,8 @@ class MemoryGame:
         self._yellow_led.off()
         self._buzzer.off()
         self._rgb_led.off()
+        self._colors_to_remember = []
+        self._turn = 0
         self._role = "machine"
         self._is_game_ready = False
 
