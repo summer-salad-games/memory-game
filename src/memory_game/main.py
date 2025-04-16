@@ -5,9 +5,9 @@ import random
 
 logging.basicConfig(level=logging.INFO)
 
-class MemoryGame:
+class Main:
     
-    def __init__(self, init_delay = 0, loop_delay = 0):
+    def __init__(self, init_delay=0, loop_delay=0):
         logging.info("Initializing program")
 
         self._init_delay = init_delay
@@ -65,7 +65,7 @@ class MemoryGame:
         self._add_color_to_remember()
 
     def _loop(self):
-        """ Loop function """
+        time.sleep(self._loop_delay)
 
     def _exit(self):
         logging.info("Exiting program")
@@ -248,8 +248,13 @@ class MemoryGame:
             logging.info("Starting loop")
             while True:
                 self._loop()
-                time.sleep(self._loop_delay)
         except (KeyboardInterrupt, SystemExit):
             logging.info("Program interrupted")
         finally:
             self._exit()
+
+def main():
+    Main(init_delay=1, loop_delay=0.025).start()
+
+if __name__ == "__main__":
+    main()
