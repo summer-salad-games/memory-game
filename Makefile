@@ -2,7 +2,7 @@ PYTHON=poetry run python
 SRC_DIR=src
 MAIN_MODULE=memory_game.main
 
-.PHONY: install update lock run clean
+.PHONY: install update lock format lint run clean
 
 install:
 	poetry install
@@ -11,7 +11,14 @@ update:
 	poetry update
 
 lock:
-    poetry lock
+	poetry lock
+
+format:
+	poetry run black $(SRC_DIR)
+	poetry run isort $(SRC_DIR)
+
+lint:
+	poetry run pylint $(SRC_DIR)
 
 run:
 	PYTHONPATH=$(SRC_DIR) $(PYTHON) -m $(MAIN_MODULE)

@@ -1,18 +1,20 @@
-from gpiozero import Button, LED, Buzzer, RGBLED
-import time
 import logging
 import random
+import time
+
+from gpiozero import LED, RGBLED, Button, Buzzer
 
 logging.basicConfig(level=logging.INFO)
 
+
 class Main:
-    
+
     def __init__(self, init_delay=0, loop_delay=0):
         logging.info("Initializing program")
 
         self._init_delay = init_delay
         self._loop_delay = loop_delay
-        
+
         self._green_button = Button(22, bounce_time=0.1)
         self._red_button = Button(5, bounce_time=0.1)
         self._blue_button = Button(6, bounce_time=0.1)
@@ -24,7 +26,7 @@ class Main:
         self._blue_led = LED(25)
         self._yellow_led = LED(12)
 
-        self._rgb_led = RGBLED(16, 21 , 20, active_high=False, initial_value=(0, 0, 0))
+        self._rgb_led = RGBLED(16, 21, 20, active_high=False, initial_value=(0, 0, 0))
 
         self._buzzer = Buzzer(17)
 
@@ -39,17 +41,33 @@ class Main:
     def _setup(self):
         logging.info("Setting up program")
 
-        self._green_button.when_activated = lambda: self._button_event(True, self._green_led, "green")
-        self._green_button.when_deactivated = lambda: self._button_event(False, self._green_led, "green")
+        self._green_button.when_activated = lambda: self._button_event(
+            True, self._green_led, "green"
+        )
+        self._green_button.when_deactivated = lambda: self._button_event(
+            False, self._green_led, "green"
+        )
 
-        self._red_button.when_activated = lambda: self._button_event(True, self._red_led, "red")
-        self._red_button.when_deactivated = lambda: self._button_event(False, self._red_led, "red")
+        self._red_button.when_activated = lambda: self._button_event(
+            True, self._red_led, "red"
+        )
+        self._red_button.when_deactivated = lambda: self._button_event(
+            False, self._red_led, "red"
+        )
 
-        self._blue_button.when_activated = lambda: self._button_event(True, self._blue_led, "blue")
-        self._blue_button.when_deactivated = lambda: self._button_event(False, self._blue_led, "blue")
+        self._blue_button.when_activated = lambda: self._button_event(
+            True, self._blue_led, "blue"
+        )
+        self._blue_button.when_deactivated = lambda: self._button_event(
+            False, self._blue_led, "blue"
+        )
 
-        self._yellow_button.when_activated = lambda: self._button_event(True, self._yellow_led, "yellow")
-        self._yellow_button.when_deactivated = lambda: self._button_event(False, self._yellow_led, "yellow")
+        self._yellow_button.when_activated = lambda: self._button_event(
+            True, self._yellow_led, "yellow"
+        )
+        self._yellow_button.when_deactivated = lambda: self._button_event(
+            False, self._yellow_led, "yellow"
+        )
 
         self._reset_button.when_activated = lambda: self._reset_button_event(True)
         self._reset_button.when_deactivated = lambda: self._reset_button_event(False)
@@ -113,11 +131,18 @@ class Main:
     def _play_init_sequence(self):
         logging.info("Starting initialization sequence")
         delay = 0.15
-        
-        led_sequence = [self._green_led, self._red_led, self._blue_led, self._yellow_led]
+
+        led_sequence = [
+            self._green_led,
+            self._red_led,
+            self._blue_led,
+            self._yellow_led,
+        ]
         reversed_led_sequence = led_sequence[::-1]
 
-        self._rgb_led.pulse(on_color=(0, 1, 0), off_color=(1, 0, 0), fade_in_time=0.5, fade_out_time=0.5)
+        self._rgb_led.pulse(
+            on_color=(0, 1, 0), off_color=(1, 0, 0), fade_in_time=0.5, fade_out_time=0.5
+        )
 
         self._bounce_leds(led_sequence)
         time.sleep(delay)
@@ -253,8 +278,10 @@ class Main:
         finally:
             self._exit()
 
+
 def main():
     Main(init_delay=1, loop_delay=0.025).start()
+
 
 if __name__ == "__main__":
     main()
