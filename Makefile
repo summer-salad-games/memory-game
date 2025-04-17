@@ -1,6 +1,6 @@
 PYTHON=poetry run python
 SRC_DIR=src
-MAIN_MODULE=memory_game.main
+MAIN_MODULE=memory_game.entrypoint
 
 .PHONY: install update lock format lint run clean
 
